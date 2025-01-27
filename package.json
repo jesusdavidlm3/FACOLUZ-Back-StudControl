@@ -1,0 +1,27 @@
+{
+  "name": "facoluz-back-studcontrol",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "server": "node --env-file .env --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jesusdavidlm3/FACOLUZ-Back-StudControl.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jesusdavidlm3/FACOLUZ-Back-StudControl/issues"
+  },
+  "homepage": "https://github.com/jesusdavidlm3/FACOLUZ-Back-StudControl#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mariadb": "^3.4.0",
+    "uuid": "^11.0.5"
+  }
+}
