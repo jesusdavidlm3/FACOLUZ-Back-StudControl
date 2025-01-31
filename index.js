@@ -78,6 +78,76 @@ app.patch('/api/reactivateUser', tokenVerification.forSysAdmins, async (req, res
 	}
 })
 
+app.get('/api/getSectioninfo', tokenVerification.forStudyControl, async (req, res) => {
+	try{
+		let dbResponse = await db.getSectionInfo()
+		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send('Error del servidor')
+	}
+})
+
+app.get("/api/getInfoByIdentification/:identification", async(req, res) => {
+	
+	const identification = req.params.identification
+
+	try{
+		let dbResponse = await db.getInfoByIdentification(identification)
+		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.post("/api/asignIntoAsignature", async(req, res) => {
+	const data = req.body
+
+	try{
+		const dbResponse = await db.asignIntoAsignature(data)
+		res.status(200).send("Asignado con exito")
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.delete("/api/clearAsignature/:asignature", async(req, res) => {
+	const asignature = req.params.asignature
+
+	try{
+		const dbResponse = await db.clearAsignature(asignature)
+		res.status(200).send("Materia despejada")
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.delete("/api/clearAllAsignatures", async(req, res) => {
+	try{
+		const dbResponse = await db.clearAllAsigantures()
+		res.status(200).send("Todas las materias despejadas")
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.get("/getAsignatureinfo/:section/:asignature", async(req, res) => {
+	const asignature = req.params.asignature
+	const section = req.params.section
+
+	try{
+		const dbResponse = await db.getAsignatureInfo(section, asignature) 
+		return dbResponse
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
 const server = createServer(app)
 server.listen(port, () => {
 	console.log(`Su puerto es: ${process.env.PORT}`)

@@ -78,3 +78,120 @@ export async function reactivateUser(data, currentUser){
 		connection.release()
 	}
 }
+
+export async function getSectionInfo(section){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			SELECT * FROM clases WHERE section = ?
+		`, [section])
+		const studentsListPP3 = res.filter(item => item.role == 0 && item.asignature == 'pp3').lenght
+		const teachersListPP3 = res.filter(item => item.role == 1 && item.asignature == 'pp3').lenght
+		const teachersListpp4 = res.filter(item => item.role == 1 && item.asignature == 'pp4').lenght
+		const studentsListpp4 = res.filter(item => item.role == 0 && item.asignature == 'pp4').lenght
+
+		const result = {
+			studentsListPP3: studentsListPP3,
+			teachersListPP3: teachersListPP3,
+			teachersListpp4: teachersListpp4,
+			studentsListpp4: studentsListpp4
+		}
+
+		return result
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function getInfoByIdentification(identification){
+	let connection
+	try{	
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			SELECT * FROM clases WHERE iserId = ?
+		`, [identification])
+		return res
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function asignIntoAsignature(data){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
+		`, [data.section, data.asignature, data.userId, data.role])
+		console.log(res)
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function clearAsignature(asignature){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			DELETE * FROM clases WHERE asignature = ?
+		`, [asignature])
+		console.log(res)
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function clearAllAsigantures(){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			DELETE * FROM clases
+		`)
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function getAsignatureInfo(section, asignature){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const list = await connection.query(`
+			SELECT * FROM clases INNER JOIN users WHERE clases.section = ? AND	clases.asignature = ?
+		`, [section, asignature])
+		return list
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function removeFromAsignature(identification){
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			DELETE * FROM clases WHERE userId = ?
+		`, [identification])
+		return res
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
