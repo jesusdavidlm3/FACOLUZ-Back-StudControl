@@ -41,7 +41,7 @@ app.post('/api/login', async (req, res) => {
 	}
 })
 
-app.post('/api/createUser', tokenVerification.forSysAdmins, async (req, res) => {
+app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) => {
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
