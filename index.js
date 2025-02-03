@@ -135,7 +135,7 @@ app.delete("/api/clearAllAsignatures", async(req, res) => {
 	}
 })
 
-app.get("/getAsignatureinfo/:section/:asignature", async(req, res) => {
+app.get("/api/getAsignatureinfo/:section/:asignature", async(req, res) => {
 	const asignature = req.params.asignature
 	const section = req.params.section
 
