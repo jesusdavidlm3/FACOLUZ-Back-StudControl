@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import * as jwt from 'https://deno.land/x/jose@v5.9.6/index.ts'
 const secret = process.env.SECRET
 
 

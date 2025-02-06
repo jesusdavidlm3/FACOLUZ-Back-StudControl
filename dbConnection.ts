@@ -1,6 +1,6 @@
 import mariadb from 'mariadb'
 import { v4 as UIDgenerator } from 'uuid';
-
+import * as t from './interfaces.ts'
 
 const db = mariadb.createPool({
 	host: process.env.BDD_HOST,
@@ -12,7 +12,7 @@ const db = mariadb.createPool({
 	conexionLimit: process.env.BDD_CONECTION_LIMITS
 })
 
-export async function login(data){
+export async function login(data: t.loginData){
 	const {identification, passwordHash} = data
 	let connection
 	try{
@@ -26,7 +26,7 @@ export async function login(data){
 	}
 }
 
-export async function createUser(data, currentUser) {
+export async function createUser(data: t.createuserData) {
 	console.log(data)
 	const {idType, idNumber, name, lastname, password, userType} = data
 	const uid = UIDgenerator()
@@ -36,7 +36,6 @@ export async function createUser(data, currentUser) {
 		const res = await connection.query(`
 			INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
 		`, [uid, name, lastname, password, userType, idNumber, idType])
-		generateLogs(0, uid, currentUser)
 		console.log(res)
 	}catch(err){
 		return err
@@ -45,14 +44,13 @@ export async function createUser(data, currentUser) {
 	}
 }
 
-export async function deleteUser(id, currentUser){
+export async function deleteUser(id: string){
 	let connection
 	try{
 		connection = await db.getConnection()
 		const res = await connection.query(`
 			UPDATE users SET active = 0 WHERE id = ?
 		`, [id])
-		generateLogs(1, userId, currentUser)
 		console.log(res)
 	}catch(err){
 		return err
@@ -61,7 +59,7 @@ export async function deleteUser(id, currentUser){
 	}
 }
 
-export async function reactivateUser(data, currentUser){
+export async function reactivateUser(data: t.reactivateUser){
 	const {id, newPassword} = data
 	console.log(data)
 	let connection
@@ -70,7 +68,6 @@ export async function reactivateUser(data, currentUser){
 		const res = await connection.query(`
 			UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?
 		`, [newPassword, id])
-		generateLogs(2, id, currentUser)
 		console.log(res)
 	}catch(err){
 		return err
@@ -79,26 +76,36 @@ export async function reactivateUser(data, currentUser){
 	}
 }
 
-export async function getSectionInfo(section){
+export async function getSectionInfo(section: string){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res: t.clasesItem[] = await connection.query(`
 			SELECT * FROM clases WHERE section = ?
 		`, [section])
+
 		const studentsListPP3 = res.filter(item => item.role == 0 && item.asignature == 'pp3').lenght
 		const teachersListPP3 = res.filter(item => item.role == 1 && item.asignature == 'pp3').lenght
 		const teachersListpp4 = res.filter(item => item.role == 1 && item.asignature == 'pp4').lenght
 		const studentsListpp4 = res.filter(item => item.role == 0 && item.asignature == 'pp4').lenght
 
-		const result = {
-			studentsListPP3: studentsListPP3,
-			teachersListPP3: teachersListPP3,
-			teachersListpp4: teachersListpp4,
-			studentsListpp4: studentsListpp4
+		if(Object.entries(res).length == 0){
+			const result = {
+				studentsListPP3: 0,
+				teachersListPP3: 0,
+				teachersListpp4: 0,
+				studentsListpp4: 0
+			}
+			return result
+		}else{
+			const result = {
+				studentsListPP3: studentsListPP3,
+				teachersListPP3: teachersListPP3,
+				teachersListpp4: teachersListpp4,
+				studentsListpp4: studentsListpp4
+			}
+			return result
 		}
-
-		return result
 	}catch(err){
 		return err
 	}finally{
@@ -106,12 +113,12 @@ export async function getSectionInfo(section){
 	}
 }
 
-export async function getInfoByIdentification(identification){
+export async function getInfoByIdentification(identification: string){
 	let connection
 	try{	
 		connection = await db.getConnection()
 		const res = await connection.query(`
-			SELECT * FROM clases WHERE iserId = ?
+			SELECT * FROM clases WHERE userId = ?
 		`, [identification])
 		return res
 	}catch(err){
@@ -121,7 +128,22 @@ export async function getInfoByIdentification(identification){
 	}
 }
 
-export async function asignIntoAsignature(data){
+	export async function aviableStudentsList(identification: string) {
+	let connection
+	try{	
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			SELECT * FROM users WHERE identification = ?
+		`, [identification])
+		return res
+	}catch(err){
+		return err
+	}finally{
+		connection.release()
+	}
+}
+
+export async function asignIntoAsignature(data: t.asignData){
 	let connection
 	try{
 		connection = await db.getConnection()
@@ -136,7 +158,7 @@ export async function asignIntoAsignature(data){
 	}
 }
 
-export async function clearAsignature(asignature){
+export async function clearAsignature(asignature: string){
 	let connection
 	try{
 		connection = await db.getConnection()
@@ -165,7 +187,7 @@ export async function clearAllAsigantures(){
 	}
 }
 
-export async function getAsignatureInfo(section, asignature){
+export async function getAsignatureInfo(section: string, asignature: string){
 	let connection
 	try{
 		connection = await db.getConnection()
@@ -180,7 +202,7 @@ export async function getAsignatureInfo(section, asignature){
 	}
 }
 
-export async function removeFromAsignature(identification){
+export async function removeFromAsignature(identification: string){
 	let connection
 	try{
 		connection = await db.getConnection()

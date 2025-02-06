@@ -1,11 +1,12 @@
-import express from 'express'
+import express, {request, response} from 'express'
 import cors from 'cors'
-import { createServer } from 'http'
+import { createServer } from 'node:http'
 import jwt from 'jsonwebtoken'
-import * as db from './dbConnection.js'
-import * as tokenVerification from './tokenVerification.js'
+import * as db from './dbConnection.ts'
+import * as tokenVerification from './tokenVerification.ts'
+import "jsr:@std/dotenv/load";
 
-const port = process.env.PORT
+const port = Deno.env.get("PORT")
 const secret = process.env.SECRET
 
 const app = express()
@@ -45,7 +46,7 @@ app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) 
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
-		let dbResponse = await db.createUser(req.body, payload.id)
+		let dbResponse = await db.createUser(req.body)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -78,9 +79,10 @@ app.patch('/api/reactivateUser', tokenVerification.forSysAdmins, async (req, res
 	}
 })
 
-app.get('/api/getSectioninfo', tokenVerification.forStudyControl, async (req, res) => {
+app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async (req, res) => {
+	const section = req.params.section
 	try{
-		let dbResponse = await db.getSectionInfo()
+		let dbResponse = await db.getSectionInfo(section)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -94,6 +96,18 @@ app.get("/api/getInfoByIdentification/:identification", async(req, res) => {
 
 	try{
 		let dbResponse = await db.getInfoByIdentification(identification)
+		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.get("/api/aviableStudentsList/:searchParam", async(req, res) => {
+	const identification = req.params.searchParam
+
+	try{
+		let dbResponse = await db.aviableStudentsList(searchParam)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
