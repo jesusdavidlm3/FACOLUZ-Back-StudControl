@@ -1,5 +1,5 @@
-import * as jwt from 'https://deno.land/x/jose@v5.9.6/index.ts'
-const secret = process.env.SECRET
+import jwt from 'npm:jsonwebtoken'
+const secret = Deno.env.get("SECRET")
 
 
 export function forTeachOrStud(req, res, next){
@@ -47,7 +47,7 @@ export function forSysAdmins(req, res, next){
 	}
 }
 
-export function forStudyControl(req, res, next){
+export async function forStudyControl(req, res, next: () => Promise<void>){
 	try{
 		const token = req.headers.authorization.split(" ")[1]
 		const payload = jwt.verify(token, secret)
@@ -56,7 +56,7 @@ export function forStudyControl(req, res, next){
 		}else if(payload.type != 3){
 			return res.status(401).send('Usted no es un trabajador de control de estudios')
 		}
-		next()
+		await next()
 	}catch(err){
 		return res.status(401).send('Token no válido');
 	}

@@ -1,13 +1,12 @@
-import express, {request, response} from 'express'
-import cors from 'cors'
-import { createServer } from 'node:http'
-import jwt from 'jsonwebtoken'
+import express from "npm:express@4.18.2";
+import cors from "npm:cors";
+import jwt from 'npm:jsonwebtoken'
 import * as db from './dbConnection.ts'
 import * as tokenVerification from './tokenVerification.ts'
 import "jsr:@std/dotenv/load";
 
 const port = Deno.env.get("PORT")
-const secret = process.env.SECRET
+const secret = Deno.env.get("SECRET")
 
 const app = express()
 app.use(cors())
@@ -162,7 +161,12 @@ app.get("/api/getAsignatureinfo/:section/:asignature", async(req, res) => {
 	}
 })
 
-const server = createServer(app)
-server.listen(port, () => {
-	console.log(`Su puerto es: ${process.env.PORT}`)
-})	
+// const server = createServer(app)
+// server.listen(port, () => {
+// 	console.log(`Su puerto es: ${process.env.PORT}`)
+// })	
+
+
+app.listen(port, () => {
+	console.log(`Puerto: ${port}`)
+})

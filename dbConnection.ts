@@ -1,15 +1,15 @@
-import mariadb from 'mariadb'
-import { v4 as UIDgenerator } from 'uuid';
+import mariadb from "npm:mariadb";
 import * as t from './interfaces.ts'
+import "jsr:@std/dotenv/load";
 
 const db = mariadb.createPool({
-	host: process.env.BDD_HOST,
-	user: process.env.BDD_USER,
-	password: process.env.BDD_PASSWORD,
-	database: process.env.BDD_DATABASE,
-	port: process.env.BDD_PORT,
-	acquireTimeout: process.env.BDD_TIMEOUT,
-	conexionLimit: process.env.BDD_CONECTION_LIMITS
+	host: Deno.env.get("BDD_HOST"),
+	user: Deno.env.get("BDD_USER"),
+	password: Deno.env.get("BDD_PASSWORD"),
+	database: Deno.env.get("BDD_DATABASE"),
+	port: Deno.env.get("BDD_PORT"),
+	acquireTimeout: Deno.env.get("BDD_TIMEOUT"),
+	conexionLimit: Deno.env.get("BDD_CONECTION_LIMITS"),
 })
 
 export async function login(data: t.loginData){
@@ -22,25 +22,25 @@ export async function login(data: t.loginData){
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
 export async function createUser(data: t.createuserData) {
 	console.log(data)
 	const {idType, idNumber, name, lastname, password, userType} = data
-	const uid = UIDgenerator()
+	const uid = crypto.randomUUID()
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
 		`, [uid, name, lastname, password, userType, idNumber, idType])
 		console.log(res)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -48,14 +48,14 @@ export async function deleteUser(id: string){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			UPDATE users SET active = 0 WHERE id = ?
 		`, [id])
 		console.log(res)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -65,14 +65,14 @@ export async function reactivateUser(data: t.reactivateUser){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?
 		`, [newPassword, id])
 		console.log(res)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -109,7 +109,7 @@ export async function getSectionInfo(section: string){
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -124,7 +124,7 @@ export async function getInfoByIdentification(identification: string){
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -139,7 +139,7 @@ export async function getInfoByIdentification(identification: string){
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -147,14 +147,14 @@ export async function asignIntoAsignature(data: t.asignData){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
 		`, [data.section, data.asignature, data.userId, data.role])
 		console.log(res)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -162,14 +162,14 @@ export async function clearAsignature(asignature: string){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			DELETE * FROM clases WHERE asignature = ?
 		`, [asignature])
 		console.log(res)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -177,13 +177,13 @@ export async function clearAllAsigantures(){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			DELETE * FROM clases
 		`)
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -198,7 +198,7 @@ export async function getAsignatureInfo(section: string, asignature: string){
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
@@ -206,14 +206,14 @@ export async function removeFromAsignature(identification: string){
 	let connection
 	try{
 		connection = await db.getConnection()
-		const res = await connection.query(`
+		const res = await connection.execute(`
 			DELETE * FROM clases WHERE userId = ?
 		`, [identification])
 		return res
 	}catch(err){
 		return err
 	}finally{
-		connection.release()
+		connection?.release()
 	}
 }
 
