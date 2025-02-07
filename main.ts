@@ -4,6 +4,7 @@ import jwt from 'npm:jsonwebtoken'
 import * as db from './dbConnection.ts'
 import * as tokenVerification from './tokenVerification.ts'
 import "jsr:@std/dotenv/load";
+import * as t from './interfaces.ts'
 
 const port = Deno.env.get("PORT")
 const secret = Deno.env.get("SECRET")
@@ -53,7 +54,7 @@ app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) 
 	}
 })
 
-app.delete('/api/deleteUser/:id', tokenVerification.forSysAdmins, async (req, res) => {
+app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req, res) => {
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
@@ -65,7 +66,7 @@ app.delete('/api/deleteUser/:id', tokenVerification.forSysAdmins, async (req, re
 	}
 })
 
-app.patch('/api/reactivateUser', tokenVerification.forSysAdmins, async (req, res) => {
+app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, res) => {
 	console.log(req.body)
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
@@ -89,7 +90,7 @@ app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async
 	}
 })
 
-app.get("/api/getInfoByIdentification/:identification", async(req, res) => {
+app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStudyControl, async(req, res) => {
 	
 	const identification = req.params.identification
 
@@ -102,8 +103,8 @@ app.get("/api/getInfoByIdentification/:identification", async(req, res) => {
 	}
 })
 
-app.get("/api/aviableStudentsList/:searchParam", async(req, res) => {
-	const identification = req.params.searchParam
+app.get("/api/aviableStudentsList/:searchParam", tokenVerification.forStudyControl, async(req, res) => {
+	const searchParam = req.params.searchParam
 
 	try{
 		let dbResponse = await db.aviableStudentsList(searchParam)
@@ -114,8 +115,8 @@ app.get("/api/aviableStudentsList/:searchParam", async(req, res) => {
 	}
 })
 
-app.post("/api/asignIntoAsignature", async(req, res) => {
-	const data = req.body
+app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(req, res) => {
+	const data: t.asignData = req.body
 
 	try{
 		const dbResponse = await db.asignIntoAsignature(data)
@@ -126,7 +127,7 @@ app.post("/api/asignIntoAsignature", async(req, res) => {
 	}
 })
 
-app.delete("/api/clearAsignature/:asignature", async(req, res) => {
+app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl, async(req, res) => {
 	const asignature = req.params.asignature
 
 	try{
@@ -138,7 +139,7 @@ app.delete("/api/clearAsignature/:asignature", async(req, res) => {
 	}
 })
 
-app.delete("/api/clearAllAsignatures", async(req, res) => {
+app.delete("/api/clearAllAsignatures", tokenVerification.forStudyControl, async(req, res) => {
 	try{
 		const dbResponse = await db.clearAllAsigantures()
 		res.status(200).send("Todas las materias despejadas")
@@ -148,9 +149,11 @@ app.delete("/api/clearAllAsignatures", async(req, res) => {
 	}
 })
 
-app.get("/api/getAsignatureinfo/:section/:asignature", async(req, res) => {
+app.get("/api/getAsignatureinfo/:section/:asignature", tokenVerification.forStudyControl, async(req, res) => {
 	const asignature = req.params.asignature
 	const section = req.params.section
+
+	console.log(asignature, section)
 
 	try{
 		const dbResponse = await db.getAsignatureInfo(section, asignature) 
@@ -160,12 +163,6 @@ app.get("/api/getAsignatureinfo/:section/:asignature", async(req, res) => {
 		res.status(500).send("Error del servidor")
 	}
 })
-
-// const server = createServer(app)
-// server.listen(port, () => {
-// 	console.log(`Su puerto es: ${process.env.PORT}`)
-// })	
-
 
 app.listen(port, () => {
 	console.log(`Puerto: ${port}`)

@@ -36,7 +36,6 @@ export async function createUser(data: t.createuserData) {
 		const res = await connection.execute(`
 			INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
 		`, [uid, name, lastname, password, userType, idNumber, idType])
-		console.log(res)
 	}catch(err){
 		return err
 	}finally{
@@ -84,10 +83,10 @@ export async function getSectionInfo(section: string){
 			SELECT * FROM clases WHERE section = ?
 		`, [section])
 
-		const studentsListPP3 = res.filter(item => item.role == 0 && item.asignature == 'pp3').lenght
-		const teachersListPP3 = res.filter(item => item.role == 1 && item.asignature == 'pp3').lenght
-		const teachersListpp4 = res.filter(item => item.role == 1 && item.asignature == 'pp4').lenght
-		const studentsListpp4 = res.filter(item => item.role == 0 && item.asignature == 'pp4').lenght
+		const studentsListPP3 = res.filter(item => item.role == 2 && item.asignature == 'pp3').length
+		const teachersListPP3 = res.filter(item => item.role == 1 && item.asignature == 'pp3').length
+		const teachersListpp4 = res.filter(item => item.role == 1 && item.asignature == 'pp4').length
+		const studentsListpp4 = res.filter(item => item.role == 2 && item.asignature == 'pp4').length
 
 		if(Object.entries(res).length == 0){
 			const result = {
@@ -128,13 +127,14 @@ export async function getInfoByIdentification(identification: string){
 	}
 }
 
-	export async function aviableStudentsList(identification: string) {
+	export async function aviableStudentsList(searchParam: string) {
 	let connection
+	const searchParamWith = `${searchParam}%`
 	try{	
 		connection = await db.getConnection()
 		const res = await connection.query(`
-			SELECT * FROM users WHERE identification = ?
-		`, [identification])
+			SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?
+		`, [searchParamWith, searchParamWith, searchParamWith])
 		return res
 	}catch(err){
 		return err
@@ -192,8 +192,9 @@ export async function getAsignatureInfo(section: string, asignature: string){
 	try{
 		connection = await db.getConnection()
 		const list = await connection.query(`
-			SELECT * FROM clases INNER JOIN users WHERE clases.section = ? AND	clases.asignature = ?
+			SELECT * FROM clases INNER JOIN users ON clases.userId = users.is WHERE clases.section = ? AND	clases.asignature = ?
 		`, [section, asignature])
+		console.log(list)
 		return list
 	}catch(err){
 		return err
