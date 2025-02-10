@@ -14,7 +14,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {	//inicio de sesion
 	const {identification, passwordHash} = req.body
 	let dbResponse
 	try{
@@ -42,7 +42,7 @@ app.post('/api/login', async (req, res) => {
 	}
 })
 
-app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) => {
+app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) => {	//Crea un usuario nuevo (un estudiante)
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
@@ -54,7 +54,7 @@ app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) 
 	}
 })
 
-app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req, res) => {
+app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req, res) => {	//Desactivar un usuario (un estudiante)
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
@@ -66,8 +66,7 @@ app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req,
 	}
 })
 
-app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, res) => {
-	console.log(req.body)
+app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, res) => {	//Reactivar un usuario (un estudiante)
 	const token = req.headers.authorization.split(" ")[1]
 	const payload = jwt.verify(token, secret)
 	try{
@@ -79,7 +78,7 @@ app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, 
 	}
 })
 
-app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async (req, res) => {
+app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async (req, res) => {	//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
 	const section = req.params.section
 	try{
 		let dbResponse = await db.getSectionInfo(section)
@@ -90,7 +89,7 @@ app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async
 	}
 })
 
-app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStudyControl, async(req, res) => {
+app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve la informacion de un usuario (alumno o profesor)
 	
 	const identification = req.params.identification
 
@@ -103,7 +102,7 @@ app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStu
 	}
 })
 
-app.get("/api/aviableStudentsList/:searchParam", tokenVerification.forStudyControl, async(req, res) => {
+app.get("/api/aviableStudentsList/:searchParam", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParam = req.params.searchParam
 
 	try{
@@ -115,7 +114,7 @@ app.get("/api/aviableStudentsList/:searchParam", tokenVerification.forStudyContr
 	}
 })
 
-app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(req, res) => {
+app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(req, res) => {	//Asigna un estudiante o profesor a una seccion
 	const data: t.asignData = req.body
 
 	try{
@@ -127,7 +126,7 @@ app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(re
 	}
 })
 
-app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl, async(req, res) => {
+app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl, async(req, res) => {	//Elimina todos los registros relacionados a una asignatura de una seccion
 	const asignature = req.params.asignature
 
 	try{
@@ -139,7 +138,7 @@ app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl
 	}
 })
 
-app.delete("/api/clearAllAsignatures", tokenVerification.forStudyControl, async(req, res) => {
+app.delete("/api/clearAllAsignatures", tokenVerification.forStudyControl, async(req, res) => {		//Elimina todos los registros de todas las asignaturas
 	try{
 		const dbResponse = await db.clearAllAsigantures()
 		res.status(200).send("Todas las materias despejadas")
@@ -149,18 +148,29 @@ app.delete("/api/clearAllAsignatures", tokenVerification.forStudyControl, async(
 	}
 })
 
-app.get("/api/getAsignatureinfo/:section/:asignature", tokenVerification.forStudyControl, async(req, res) => {
+app.get("/api/getAsignatureList/:section/:asignature", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve una lista de alumnos y profesor asignados a una seccion
 	const asignature = req.params.asignature
 	const section = req.params.section
 
-	console.log(asignature, section)
-
 	try{
-		const dbResponse = await db.getAsignatureInfo(section, asignature) 
-		return dbResponse
+		const dbResponse = await db.getAsignatureList(section, asignature)
+		console.log(dbResponse)
+		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
 		res.status(500).send("Error del servidor")
+	}
+})
+
+app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStudyControl, async(req, res) => {
+	const id = req.params.identification
+
+	try{
+		const dbResponse = await db.removeFromAsignature(id)
+		return dbResponse
+	}catch(err){
+		console.log(err)
+		res.statu(500).send("error del servidor")
 	}
 })
 

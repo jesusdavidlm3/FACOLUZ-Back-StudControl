@@ -12,7 +12,7 @@ const db = mariadb.createPool({
 	conexionLimit: Deno.env.get("BDD_CONECTION_LIMITS"),
 })
 
-export async function login(data: t.loginData){
+export async function login(data: t.loginData){		//Inicio de sesion
 	const {identification, passwordHash} = data
 	let connection
 	try{
@@ -26,8 +26,7 @@ export async function login(data: t.loginData){
 	}
 }
 
-export async function createUser(data: t.createuserData) {
-	console.log(data)
+export async function createUser(data: t.createuserData) {		//Crea un usuario nuevo (un estudiante)
 	const {idType, idNumber, name, lastname, password, userType} = data
 	const uid = crypto.randomUUID()
 	let connection
@@ -43,14 +42,13 @@ export async function createUser(data: t.createuserData) {
 	}
 }
 
-export async function deleteUser(id: string){
+export async function deleteUser(id: string){		//Desactivar un usuario (un estudiante)
 	let connection
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
 			UPDATE users SET active = 0 WHERE id = ?
 		`, [id])
-		console.log(res)
 	}catch(err){
 		return err
 	}finally{
@@ -58,16 +56,14 @@ export async function deleteUser(id: string){
 	}
 }
 
-export async function reactivateUser(data: t.reactivateUser){
+export async function reactivateUser(data: t.reactivateUser){		//Reactivar un usuario (un estudiante)
 	const {id, newPassword} = data
-	console.log(data)
 	let connection
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
 			UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?
 		`, [newPassword, id])
-		console.log(res)
 	}catch(err){
 		return err
 	}finally{
@@ -75,8 +71,8 @@ export async function reactivateUser(data: t.reactivateUser){
 	}
 }
 
-export async function getSectionInfo(section: string){
-	let connection
+export async function getSectionInfo(section: string){		//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
+	let connection											//Que la cuenta la haga la bdd, no el back
 	try{
 		connection = await db.getConnection()
 		const res: t.clasesItem[] = await connection.query(`
@@ -112,7 +108,7 @@ export async function getSectionInfo(section: string){
 	}
 }
 
-export async function getInfoByIdentification(identification: string){
+export async function getInfoByIdentification(identification: string){	//Devuelve la informacion de un usuario (alumno o profesor)
 	let connection
 	try{	
 		connection = await db.getConnection()
@@ -127,7 +123,7 @@ export async function getInfoByIdentification(identification: string){
 	}
 }
 
-	export async function aviableStudentsList(searchParam: string) {
+	export async function aviableStudentsList(searchParam: string) {	//Devuelve estudiantes segun criterio de busqueda
 	let connection
 	const searchParamWith = `${searchParam}%`
 	try{	
@@ -143,14 +139,13 @@ export async function getInfoByIdentification(identification: string){
 	}
 }
 
-export async function asignIntoAsignature(data: t.asignData){
+export async function asignIntoAsignature(data: t.asignData){		//Asigna un estudiante o profesor a una seccion
 	let connection
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
 			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
 		`, [data.section, data.asignature, data.userId, data.role])
-		console.log(res)
 	}catch(err){
 		return err
 	}finally{
@@ -158,14 +153,13 @@ export async function asignIntoAsignature(data: t.asignData){
 	}
 }
 
-export async function clearAsignature(asignature: string){
+export async function clearAsignature(asignature: string){	//Elimina todos los registros relacionados a una asignatura de una seccion
 	let connection
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
 			DELETE * FROM clases WHERE asignature = ?
 		`, [asignature])
-		console.log(res)
 	}catch(err){
 		return err
 	}finally{
@@ -173,7 +167,7 @@ export async function clearAsignature(asignature: string){
 	}
 }
 
-export async function clearAllAsigantures(){
+export async function clearAllAsigantures(){	//Elimina todos los registros de todas las asignaturas
 	let connection
 	try{
 		connection = await db.getConnection()
@@ -187,14 +181,13 @@ export async function clearAllAsigantures(){
 	}
 }
 
-export async function getAsignatureInfo(section: string, asignature: string){
+export async function getAsignatureList(section: string, asignature: string){	//Devuelve una lista de alumnos y profesor asignados a una seccion
 	let connection
 	try{
 		connection = await db.getConnection()
 		const list = await connection.query(`
-			SELECT * FROM clases INNER JOIN users ON clases.userId = users.is WHERE clases.section = ? AND	clases.asignature = ?
+			SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE clases.section = ? AND	clases.asignature = ?
 		`, [section, asignature])
-		console.log(list)
 		return list
 	}catch(err){
 		return err
@@ -203,7 +196,7 @@ export async function getAsignatureInfo(section: string, asignature: string){
 	}
 }
 
-export async function removeFromAsignature(identification: string){
+export async function removeFromAsignature(identification: string){		//Elimina el registro de un alumno asignado a una seccion
 	let connection
 	try{
 		connection = await db.getConnection()
