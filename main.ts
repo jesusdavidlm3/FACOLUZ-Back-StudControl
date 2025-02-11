@@ -126,6 +126,29 @@ app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(re
 	}
 })
 
+app.get("/api/aviableTeachersList", tokenVerification.forStudyControl, async(req, res) => {
+	try{
+		const dbResponse = await db.aviableTeacherslist()
+		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.put("/api/asignTeacher", tokenVerification.forStudyControl, async(req, res) => {
+	const data: t.asignData = req.body
+
+	try{
+		const dbResponse = await db.asignTeacher(data)
+		console.log(dbResponse)
+		res.status(200).send(true)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
 app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl, async(req, res) => {	//Elimina todos los registros relacionados a una asignatura de una seccion
 	const asignature = req.params.asignature
 

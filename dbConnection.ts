@@ -123,7 +123,7 @@ export async function getInfoByIdentification(identification: string){	//Devuelv
 	}
 }
 
-	export async function aviableStudentsList(searchParam: string) {	//Devuelve estudiantes segun criterio de busqueda
+export async function aviableStudentsList(searchParam: string) {	//Devuelve estudiantes segun criterio de busqueda
 	let connection
 	const searchParamWith = `${searchParam}%`
 	try{	
@@ -139,6 +139,22 @@ export async function getInfoByIdentification(identification: string){	//Devuelv
 	}
 }
 
+export async function aviableTeacherslist() {		//Devuelve una lista de Profesores
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.query(`
+			SELECT id, name, lastname FROM users WHERE type = 1
+		`)
+		return res
+	}catch(err){
+		console.log(err)
+		return err
+	}finally{
+		connection?.release()
+	}
+}
+
 export async function asignIntoAsignature(data: t.asignData){		//Asigna un estudiante o profesor a una seccion
 	let connection
 	try{
@@ -146,6 +162,36 @@ export async function asignIntoAsignature(data: t.asignData){		//Asigna un estud
 		const res = await connection.execute(`
 			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
 		`, [data.section, data.asignature, data.userId, data.role])
+	}catch(err){
+		return err
+	}finally{
+		connection?.release()
+	}
+}
+
+export async function asignTeacher(data: t.asignData) {
+	let connection
+	const section = data.section
+	const asignature = data.asignature
+	const userId = data.userId
+	const role = data.role
+	console.log(data)
+	try{
+		connection = await db.getConnection()
+		const check = await connection.query(`
+			SELECT * FROM clases
+		`)
+		if(check.length != 0){
+			const deleting = await connection.execute(`
+				DELETE FROM clases WHERE role = 2 AND section = ? AND asignature = ?
+			`, [section, asignature])
+		}
+			
+		const res = await connection.execute(`
+			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
+		`, [section, asignature, userId, role])
+		return res
+		
 	}catch(err){
 		return err
 	}finally{
