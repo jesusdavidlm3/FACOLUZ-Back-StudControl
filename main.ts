@@ -154,7 +154,6 @@ app.get("/api/getAsignatureList/:section/:asignature", tokenVerification.forStud
 
 	try{
 		const dbResponse = await db.getAsignatureList(section, asignature)
-		console.log(dbResponse)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -162,15 +161,15 @@ app.get("/api/getAsignatureList/:section/:asignature", tokenVerification.forStud
 	}
 })
 
-app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStudyControl, async(req, res) => {
+app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStudyControl, async(req, res) => {		//Elimina el registro de un alumno asigando a una Seccion
 	const id = req.params.identification
 
 	try{
 		const dbResponse = await db.removeFromAsignature(id)
-		return dbResponse
+		res.status(200).send(true) 
 	}catch(err){
 		console.log(err)
-		res.statu(500).send("error del servidor")
+		res.status(500).send("error del servidor")
 	}
 })
 

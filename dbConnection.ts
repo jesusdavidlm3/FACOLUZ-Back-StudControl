@@ -201,7 +201,7 @@ export async function removeFromAsignature(identification: string){		//Elimina e
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
-			DELETE * FROM clases WHERE userId = ?
+			DELETE FROM clases WHERE userId = ?
 		`, [identification])
 		return res
 	}catch(err){
