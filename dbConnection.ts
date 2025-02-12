@@ -175,15 +175,15 @@ export async function asignTeacher(data: t.asignData) {
 	const asignature = data.asignature
 	const userId = data.userId
 	const role = data.role
-	console.log(data)
 	try{
 		connection = await db.getConnection()
 		const check = await connection.query(`
-			SELECT * FROM clases
-		`)
+			SELECT * FROM clases WHERE role = 1 AND section = ? AND asignature = ?
+		`, [section, asignature])
+		console.log(check)
 		if(check.length != 0){
 			const deleting = await connection.execute(`
-				DELETE FROM clases WHERE role = 2 AND section = ? AND asignature = ?
+				DELETE FROM clases WHERE role = 1 AND section = ? AND asignature = ?
 			`, [section, asignature])
 		}
 			
