@@ -110,11 +110,13 @@ export async function getSectionInfo(section: string){		//Devuelve la cantidad d
 
 export async function getInfoByIdentification(identification: string){	//Devuelve la informacion de un usuario (alumno o profesor)
 	let connection
+	console.log(identification)
 	try{	
 		connection = await db.getConnection()
 		const res = await connection.query(`
-			SELECT * FROM clases WHERE userId = ?
+			SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?
 		`, [identification])
+		console.log(res)
 		return res
 	}catch(err){
 		return err
@@ -256,4 +258,3 @@ export async function removeFromAsignature(identification: string){		//Elimina e
 		connection?.release()
 	}
 }
-
