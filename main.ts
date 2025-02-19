@@ -196,6 +196,6 @@ app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStu
 	}
 })
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
 	console.log(`Puerto: ${port}`)
 })

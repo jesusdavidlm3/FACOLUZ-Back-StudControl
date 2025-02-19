@@ -220,7 +220,7 @@ export async function clearAllAsigantures(){	//Elimina todos los registros de to
 	try{
 		connection = await db.getConnection()
 		const res = await connection.execute(`
-			DELETE * FROM clases
+			DELETE FROM clases
 		`)
 	}catch(err){
 		return err
