@@ -7,71 +7,63 @@ const db = mariadb.createPool({
 	user: Deno.env.get("BDD_USER"),
 	password: Deno.env.get("BDD_PASSWORD"),
 	database: Deno.env.get("BDD_DATABASE"),
-	port: Deno.env.get("BDD_PORT"),
-	acquireTimeout: Deno.env.get("BDD_TIMEOUT"),
-	conexionLimit: Deno.env.get("BDD_CONECTION_LIMITS"),
+	port: Number(Deno.env.get("BDD_PORT")),
+	acquireTimeout: Number(Deno.env.get("BDD_TIMEOUT")),
+	connectionLimit: Number(Deno.env.get("BDD_CONECTION_LIMITS")),
 })
 
-export async function login(data: t.loginData){		//Inicio de sesion
-	const {identification, passwordHash} = data
+async function query(query: string, params?: object): Promise<object> {
 	let connection
 	try{
 		connection = await db.getConnection()
-		const user = await connection.query('SELECT * FROM users WHERE identification = ?', [identification])
-		return user
+		const res = await connection.query(query, params)
+		return res
 	}catch(err){
-		return err
+		console.log(err)
+		throw err
 	}finally{
 		connection?.release()
 	}
+}
+
+async function execute(query: string, params?: object): Promise<object> {
+	let connection
+	try{
+		connection = await db.getConnection()
+		const res = await connection.execute(query, params)
+		return res
+	}catch(err){
+		console.log(err)
+		throw err
+	}finally{
+		connection?.release()
+	}
+}
+
+export async function login(data: t.loginData): Promise<object>{		//Inicio de sesion
+	const {identification} = data
+	const res = await query('SELECT * FROM users WHERE identification = ?', [identification])
+	return res
 }
 
 export async function createUser(data: t.createuserData) {		//Crea un usuario nuevo (un estudiante)
 	const {idType, idNumber, name, lastname, password, userType} = data
 	const uid = crypto.randomUUID()
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
-		`, [uid, name, lastname, password, userType, idNumber, idType])
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute(`
+		INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
+	`, [uid, name, lastname, password, userType, idNumber, idType])
 }
 
 export async function deleteUser(id: string){		//Desactivar un usuario (un estudiante)
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			UPDATE users SET active = 0 WHERE id = ?
-		`, [id])
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute("UPDATE users SET active = 0 WHERE id = ?", [id])
 }
 
 export async function reactivateUser(data: t.reactivateUser){		//Reactivar un usuario (un estudiante)
 	const {id, newPassword} = data
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?
-		`, [newPassword, id])
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute("UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?", [newPassword, id])
 }
 
-export async function getSectionInfo(section: string){		//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
+export async function getSectionInfo(section: string): Promise<object>{		//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
 	let connection											//Que la cuenta la haga la bdd, no el back
 	try{
 		connection = await db.getConnection()
@@ -102,76 +94,34 @@ export async function getSectionInfo(section: string){		//Devuelve la cantidad d
 			return result
 		}
 	}catch(err){
-		return err
+		throw err
 	}finally{
 		connection?.release()
 	}
 }
 
-export async function getInfoByIdentification(identification: string){	//Devuelve la informacion de un usuario (alumno o profesor)
-	let connection
-	console.log(identification)
-	try{	
-		connection = await db.getConnection()
-		const res = await connection.query(`
-			SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?
-		`, [identification])
-		console.log(res)
-		return res
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+export async function getInfoByIdentification(identification: string): Promise<object>{	//Devuelve la informacion de un usuario (alumno o profesor)
+	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?", [identification])
+	return res
 }
 
-export async function aviableStudentsList(searchParam: string) {	//Devuelve estudiantes segun criterio de busqueda
-	let connection
+export async function aviableStudentsList(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParamWith = `${searchParam}%`
-	try{	
-		connection = await db.getConnection()
-		const res = await connection.query(`
-			SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?
-		`, [searchParamWith, searchParamWith, searchParamWith])
-		return res
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const res = await query("SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?", [searchParamWith, searchParamWith, searchParamWith])
+	return res
 }
 
-export async function aviableTeacherslist() {		//Devuelve una lista de Profesores
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.query(`
-			SELECT id, name, lastname FROM users WHERE type = 1
-		`)
-		return res
-	}catch(err){
-		console.log(err)
-		return err
-	}finally{
-		connection?.release()
-	}
+export async function aviableTeacherslist(): Promise<object> {		//Devuelve una lista de Profesores
+	const res = await query("SELECT id, name, lastname FROM users WHERE type = 1")
+	return res
 }
 
-export async function asignIntoAsignature(data: t.asignData){		//Asigna un estudiante o profesor a una seccion
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)
-		`, [data.section, data.asignature, data.userId, data.role])
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+export async function asignIntoAsignature(data: t.asignData): Promise<object>{		//Asigna un estudiante o profesor a una seccion
+	const res = await execute("INSERT INTO clases(section, asignature, userId, role) VALUES(?, ?, ?, ?)", [data.section, data.asignature, data.userId, data.role])
+	return res
 }
 
-export async function asignTeacher(data: t.asignData) {
+export async function asignTeacher(data: t.asignData): Promise<object> {
 	let connection
 	const section = data.section
 	const asignature = data.asignature
@@ -184,7 +134,7 @@ export async function asignTeacher(data: t.asignData) {
 		`, [section, asignature])
 		console.log(check)
 		if(check.length != 0){
-			const deleting = await connection.execute(`
+			const _deleting = await connection.execute(`
 				DELETE FROM clases WHERE role = 1 AND section = ? AND asignature = ?
 			`, [section, asignature])
 		}
@@ -195,66 +145,25 @@ export async function asignTeacher(data: t.asignData) {
 		return res
 		
 	}catch(err){
-		return err
+		throw err
 	}finally{
 		connection?.release()
 	}
 }
 
 export async function clearAsignature(asignature: string){	//Elimina todos los registros relacionados a una asignatura de una seccion
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			DELETE * FROM clases WHERE asignature = ?
-		`, [asignature])
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute("DELETE * FROM clases WHERE asignature = ?", [asignature])
 }
 
 export async function clearAllAsigantures(){	//Elimina todos los registros de todas las asignaturas
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			DELETE FROM clases
-		`)
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute("DELETE FROM clases")
 }
 
-export async function getAsignatureList(section: string, asignature: string){	//Devuelve una lista de alumnos y profesor asignados a una seccion
-	let connection
-	try{
-		connection = await db.getConnection()
-		const list = await connection.query(`
-			SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE clases.section = ? AND	clases.asignature = ?
-		`, [section, asignature])
-		return list
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+export async function getAsignatureList(section: string, asignature: string): Promise<object>{	//Devuelve una lista de alumnos y profesor asignados a una seccion
+	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE clases.section = ? AND	clases.asignature = ?", [section, asignature])
+	return res
 }
 
 export async function removeFromAsignature(identification: string){		//Elimina el registro de un alumno asignado a una seccion
-	let connection
-	try{
-		connection = await db.getConnection()
-		const res = await connection.execute(`
-			DELETE FROM clases WHERE userId = ?
-		`, [identification])
-		return res
-	}catch(err){
-		return err
-	}finally{
-		connection?.release()
-	}
+	const _res = await execute("DELETE FROM clases WHERE userId = ?", [identification])
 }

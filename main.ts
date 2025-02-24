@@ -15,7 +15,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 app.post('/api/login', async (req, res) => {	//inicio de sesion
-	const {identification, passwordHash} = req.body
+	const {passwordHash} = req.body
 	let dbResponse
 	try{
 		dbResponse = await db.login(req.body)
@@ -43,10 +43,8 @@ app.post('/api/login', async (req, res) => {	//inicio de sesion
 })
 
 app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) => {	//Crea un usuario nuevo (un estudiante)
-	const token = req.headers.authorization.split(" ")[1]
-	const payload = jwt.verify(token, secret)
 	try{
-		let dbResponse = await db.createUser(req.body)
+		const dbResponse = await db.createUser(req.body)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -55,10 +53,8 @@ app.post('/api/createUser', tokenVerification.forStudyControl, async (req, res) 
 })
 
 app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req, res) => {	//Desactivar un usuario (un estudiante)
-	const token = req.headers.authorization.split(" ")[1]
-	const payload = jwt.verify(token, secret)
 	try{
-		let dbResponse = await db.deleteUser(req.params.id, payload.id)
+		const dbResponse = await db.deleteUser(req.params.id)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -67,10 +63,8 @@ app.delete('/api/deleteUser/:id', tokenVerification.forStudyControl, async (req,
 })
 
 app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, res) => {	//Reactivar un usuario (un estudiante)
-	const token = req.headers.authorization.split(" ")[1]
-	const payload = jwt.verify(token, secret)
 	try{
-		let dbResponse = await db.reactivateUser(req.body, payload.id)
+		const dbResponse = await db.reactivateUser(req.body)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -81,7 +75,7 @@ app.patch('/api/reactivateUser', tokenVerification.forStudyControl, async (req, 
 app.get('/api/getSectioninfo/:section', tokenVerification.forStudyControl, async (req, res) => {	//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
 	const section = req.params.section
 	try{
-		let dbResponse = await db.getSectionInfo(section)
+		const dbResponse = await db.getSectionInfo(section)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -94,7 +88,7 @@ app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStu
 	const identification = req.params.identification
 
 	try{
-		let dbResponse = await db.getInfoByIdentification(identification)
+		const dbResponse = await db.getInfoByIdentification(identification)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -106,7 +100,7 @@ app.get("/api/aviableStudentsList/:searchParam", tokenVerification.forStudyContr
 	const searchParam = req.params.searchParam
 
 	try{
-		let dbResponse = await db.aviableStudentsList(searchParam)
+		const dbResponse = await db.aviableStudentsList(searchParam)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
@@ -118,7 +112,7 @@ app.post("/api/asignIntoAsignature", tokenVerification.forStudyControl, async(re
 	const data: t.asignData = req.body
 
 	try{
-		const dbResponse = await db.asignIntoAsignature(data)
+		const _dbResponse = await db.asignIntoAsignature(data)
 		res.status(200).send("Asignado con exito")
 	}catch(err){
 		console.log(err)
@@ -153,7 +147,7 @@ app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl
 	const asignature = req.params.asignature
 
 	try{
-		const dbResponse = await db.clearAsignature(asignature)
+		const _dbResponse = await db.clearAsignature(asignature)
 		res.status(200).send("Materia despejada")
 	}catch(err){
 		console.log(err)
@@ -163,7 +157,7 @@ app.delete("/api/clearAsignature/:asignature", tokenVerification.forStudyControl
 
 app.delete("/api/clearAllAsignatures", tokenVerification.forStudyControl, async(req, res) => {		//Elimina todos los registros de todas las asignaturas
 	try{
-		const dbResponse = await db.clearAllAsigantures()
+		const _dbResponse = await db.clearAllAsigantures()
 		res.status(200).send("Todas las materias despejadas")
 	}catch(err){
 		console.log(err)
@@ -188,7 +182,7 @@ app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStu
 	const id = req.params.identification
 
 	try{
-		const dbResponse = await db.removeFromAsignature(id)
+		const _dbResponse = await db.removeFromAsignature(id)
 		res.status(200).send(true) 
 	}catch(err){
 		console.log(err)
