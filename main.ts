@@ -16,9 +16,8 @@ app.use(express.urlencoded({extended: true}))
 
 app.post('/api/login', async (req, res) => {	//inicio de sesion
 	const {passwordHash} = req.body
-	let dbResponse
 	try{
-		dbResponse = await db.login(req.body)
+		const dbResponse: t.userData[] = await db.login(req.body)
 		if(dbResponse.length == 0){
 			res.status(404).send('Usuario no encontrado')
 		}else if(dbResponse[0].passwordSHA256 != passwordHash){

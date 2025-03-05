@@ -40,21 +40,20 @@ async function execute(query: string, params?: object): Promise<object> {
 	}
 }
 
-export async function login(data: t.loginData): Promise<object>{		//Inicio de sesion
-	const {identification} = data
-	const res = await query('SELECT * FROM users WHERE identification = ?', [identification])
+export async function login(data: t.loginData): Promise<t.userData[]>{		//Inicio de sesion
+	const {id} = data
+	const res = await query('SELECT * FROM users WHERE id = ?', [id])
 	return res
 }
 
 export async function createUser(data: t.createuserData) {		//Crea un usuario nuevo (un estudiante)
-	const {idType, idNumber, name, lastname, password, userType} = data
-	const uid = crypto.randomUUID()
+	const {id, idType, name, lastname, passwordSHA256, userType} = data
 	const _res = await execute(`
-		INSERT INTO users(id, name, lastname, passwordSHA256, type, identification, identificationType) VALUES(?, ?, ?, ?, ?, ?, ?)
-	`, [uid, name, lastname, password, userType, idNumber, idType])
+		INSERT INTO users(id, name, lastname, passwordSHA256, type, identificationType) VALUES(?, ?, ?, ?, ?, ?)
+	`, [id, name, lastname, passwordSHA256, userType, idType])
 }
 
-export async function deleteUser(id: string){		//Desactivar un usuario (un estudiante)
+export async function deleteUser(id: number){		//Desactivar un usuario (un estudiante)
 	const _res = await execute("UPDATE users SET active = 0 WHERE id = ?", [id])
 }
 
@@ -100,14 +99,14 @@ export async function getSectionInfo(section: string): Promise<object>{		//Devue
 	}
 }
 
-export async function getInfoByIdentification(identification: string): Promise<object>{	//Devuelve la informacion de un usuario (alumno o profesor)
-	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?", [identification])
+export async function getInfoByIdentification(id: number): Promise<object>{	//Devuelve la informacion de un usuario (alumno o profesor)
+	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?", [id])
 	return res
 }
 
 export async function aviableStudentsList(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParamWith = `${searchParam}%`
-	const res = await query("SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?", [searchParamWith, searchParamWith, searchParamWith])
+	const res = await query("SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?", [Number(searchParamWith), searchParamWith, searchParamWith])
 	return res
 }
 
@@ -164,6 +163,6 @@ export async function getAsignatureList(section: string, asignature: string): Pr
 	return res
 }
 
-export async function removeFromAsignature(identification: string){		//Elimina el registro de un alumno asignado a una seccion
-	const _res = await execute("DELETE FROM clases WHERE userId = ?", [identification])
+export async function removeFromAsignature(id: number){		//Elimina el registro de un alumno asignado a una seccion
+	const _res = await execute("DELETE FROM clases WHERE userId = ?", [id])
 }

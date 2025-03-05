@@ -1,32 +1,37 @@
 export interface loginData{
-    identification: string,
+    id: number,
     passwordHash: string
 }
 
 export interface createuserData{
     idType: number,
-    idNumber: string,
+    id: number,
     name: string,
     lastname: string,
-    password: string,
-    userType: number
+    passwordSHA256: string,
+    userType: number,
+    type: 0 | 1 | 2 | 3
+}
+
+export interface userData extends createuserData{
+    active: boolean
 }
 
 export interface reactivateUser{
-    id: string,
+    id: number,
     newPassword: string
 }
 
 export interface clasesItem{
     section: string,
     asignature: string,
-    userId: string,
+    userId: number,
     role: number
 }
 
 export interface asignData{
     section: string,
     asignature: string,
-    userId: string,
+    userId: number,
     role: number
 }
