@@ -1,6 +1,7 @@
 import mariadb from "npm:mariadb";
 import * as t from './interfaces.ts'
 import "jsr:@std/dotenv/load";
+import console from "node:console";
 
 const db = mariadb.createPool({
 	host: Deno.env.get("BDD_HOST"),
@@ -100,7 +101,12 @@ export async function getSectionInfo(section: string): Promise<object>{		//Devue
 }
 
 export async function getInfoByIdentification(id: number): Promise<object>{	//Devuelve la informacion de un usuario (alumno o profesor)
-	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.identification = ?", [id])
+	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE users.id = ?", [id])
+	return res
+}
+
+export async function verifyStudentForAssign(identification:number) {
+	const res = await query("SELECT name, lastname from users WHERE id = ? AND type = 2", [identification])
 	return res
 }
 

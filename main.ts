@@ -5,6 +5,7 @@ import * as db from './dbConnection.ts'
 import * as tokenVerification from './tokenVerification.ts'
 import "jsr:@std/dotenv/load";
 import * as t from './interfaces.ts'
+import console from "node:console";
 
 const port = Deno.env.get("PORT")
 const secret = Deno.env.get("SECRET")
@@ -89,6 +90,19 @@ app.get("/api/getInfoByIdentification/:identification", tokenVerification.forStu
 	try{
 		const dbResponse = await db.getInfoByIdentification(identification)
 		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
+
+app.get("/api/verifyStudentForAssign/:identification", tokenVerification.forStudyControl, async(req, res) => {
+
+	const identification = req.params.identification
+
+	try{
+		const dbResponde = await db.verifyStudentForAssign(identification)
+		res.status(200).send(dbResponde)
 	}catch(err){
 		console.log(err)
 		res.status(500).send("Error del servidor")
