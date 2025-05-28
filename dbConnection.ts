@@ -58,46 +58,8 @@ export async function deleteUser(id: number){		//Desactivar un usuario (un estud
 	const _res = await execute("UPDATE users SET active = 0 WHERE id = ?", [id])
 }
 
-export async function reactivateUser(data: t.reactivateUser){		//Reactivar un usuario (un estudiante)
-	const {id, newPassword} = data
-	const _res = await execute("UPDATE users SET active = 1, passwordSHA256 = ? WHERE id = ?", [newPassword, id])
-}
-
-export async function getSectionInfo(section: string): Promise<object>{		//Devuelve la cantidad de estudiantes de una seccion (falta optimizar)
-	let connection											//Que la cuenta la haga la bdd, no el back
-	try{
-		connection = await db.getConnection()
-		const res: t.clasesItem[] = await connection.query(`
-			SELECT * FROM clases WHERE section = ?
-		`, [section])
-
-		const studentsListPP3 = res.filter(item => item.role == 2 && item.asignature == 'pp3').length
-		const teachersListPP3 = res.filter(item => item.role == 1 && item.asignature == 'pp3').length
-		const teachersListpp4 = res.filter(item => item.role == 1 && item.asignature == 'pp4').length
-		const studentsListpp4 = res.filter(item => item.role == 2 && item.asignature == 'pp4').length
-
-		if(Object.entries(res).length == 0){
-			const result = {
-				studentsListPP3: 0,
-				teachersListPP3: 0,
-				teachersListpp4: 0,
-				studentsListpp4: 0
-			}
-			return result
-		}else{
-			const result = {
-				studentsListPP3: studentsListPP3,
-				teachersListPP3: teachersListPP3,
-				teachersListpp4: teachersListpp4,
-				studentsListpp4: studentsListpp4
-			}
-			return result
-		}
-	}catch(err){
-		throw err
-	}finally{
-		connection?.release()
-	}
+export async function reactivateUser(userId: number){		//Reactivar un usuario (un estudiante)
+	const _res = await execute("UPDATE users SET active = 1 WHERE id = ?", [userId])
 }
 
 export async function getInfoByIdentification(id: number): Promise<object>{	//Devuelve la informacion de un usuario (alumno o profesor)
@@ -105,14 +67,14 @@ export async function getInfoByIdentification(id: number): Promise<object>{	//De
 	return res
 }
 
-export async function verifyStudentForAssign(identification:number) {
+export async function verifyStudentForAssign(identification:number) {	//Verifica que un estudiante exista y no este asignado
 	const res = await query("SELECT name, lastname from users WHERE id = ? AND type = 2", [identification])
 	return res
 }
 
-export async function aviableStudentsList(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
+export async function searchByNameOrId(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParamWith = `${searchParam}%`
-	const res = await query("SELECT * FROM users WHERE identification LIKE ? OR name LIKE ? OR lastname LIKE ?", [Number(searchParamWith), searchParamWith, searchParamWith])
+	const res = await query("SELECT * FROM users WHERE id LIKE ? OR name LIKE ? OR lastname LIKE ? AND active = 1", [Number(searchParam), searchParamWith, searchParamWith])
 	return res
 }
 
@@ -126,7 +88,7 @@ export async function asignIntoAsignature(data: t.asignData): Promise<object>{		
 	return res
 }
 
-export async function asignTeacher(data: t.asignData): Promise<object> {
+export async function asignTeacher(data: t.asignData): Promise<object> {	//Asigna un profesor a una seccion de manera unica
 	let connection
 	const section = data.section
 	const asignature = data.asignature
@@ -156,13 +118,13 @@ export async function asignTeacher(data: t.asignData): Promise<object> {
 	}
 }
 
-export async function clearAsignature(asignature: string){	//Elimina todos los registros relacionados a una asignatura de una seccion
-	const _res = await execute("DELETE * FROM clases WHERE asignature = ?", [asignature])
-}
+// export async function clearAsignature(asignature: string){	//Elimina todos los registros relacionados a una asignatura de una seccion
+// 	const _res = await execute("DELETE * FROM clases WHERE asignature = ?", [asignature])
+// }
 
-export async function clearAllAsigantures(){	//Elimina todos los registros de todas las asignaturas
-	const _res = await execute("DELETE FROM clases")
-}
+// export async function clearAllAsigantures(){	//Elimina todos los registros de todas las asignaturas
+// 	const _res = await execute("DELETE FROM clases")
+// }
 
 export async function getAsignatureList(section: string, asignature: string): Promise<object>{	//Devuelve una lista de alumnos y profesor asignados a una seccion
 	const res = await query("SELECT * FROM clases INNER JOIN users ON clases.userId = users.id WHERE clases.section = ? AND	clases.asignature = ?", [section, asignature])
@@ -171,4 +133,26 @@ export async function getAsignatureList(section: string, asignature: string): Pr
 
 export async function removeFromAsignature(id: number){		//Elimina el registro de un alumno asignado a una seccion
 	const _res = await execute("DELETE FROM clases WHERE userId = ?", [id])
+}
+
+export async function getSettingsStartedPeriod(){			//Devuelve si el periodo academico se encuentra en curso 
+	const res = await query("SELECT * FROM settings WHERE label = 'startedPeriod'")
+	return res
+}
+
+export async function endOrStartPeriod(){					//Pone en marcha curso el periodo academico o en su defecto lo finaliza
+	const currentState = await query ("SELECT value FROM settings WHERE label = 'startedPeriod'")
+	if(currentState[0].value == 0){
+		await execute("UPDATE settings SET value = 1 WHERE label = 'startedPeriod'")
+		return "Periodo academico iniciado"
+	}else{
+		await execute("UPDATE settings SET value = 0 WHERE label = 'startedPeriod'")
+		return "Periodo academico Finalizado"
+	}
+}
+
+export async function verifyForReactivate(id: number) {
+	const res = await query("SELECT active, name, lastname FROM users WHERE id = ?", [id])
+	console.log(res)
+	return res[0]
 }
