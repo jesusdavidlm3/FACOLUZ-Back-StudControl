@@ -181,18 +181,18 @@ app.put("/api/asignTeacher", tokenVerification.forStudyControl, async(req, res) 
 // 	}
 // })
 
-// app.get("/api/getAsignatureList/:section/:asignature", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve una lista de alumnos y profesor asignados a una seccion
-// 	const asignature = req.params.asignature
-// 	const section = req.params.section
+app.get("/api/getAsignatureList/:section/:asignature", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve una lista de alumnos y profesor asignados a una seccion
+	const asignature = req.params.asignature
+	const section = req.params.section
 
-// 	try{
-// 		const dbResponse = await db.getAsignatureList(section, asignature)
-// 		res.status(200).send(dbResponse)
-// 	}catch(err){
-// 		console.log(err)
-// 		res.status(500).send("Error del servidor")
-// 	}
-// })
+	try{
+		const dbResponse = await db.getAsignatureList(section, asignature)
+		res.status(200).send(dbResponse)
+	}catch(err){
+		console.log(err)
+		res.status(500).send("Error del servidor")
+	}
+})
 
 app.delete("/api/removeFromAsignature/:identification", tokenVerification.forStudyControl, async(req, res) => {		//Elimina el registro de un alumno asigando a una Seccion
 	const id = req.params.identification

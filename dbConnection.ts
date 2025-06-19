@@ -74,7 +74,7 @@ export async function verifyStudentForAssign(identification:number) {	//Verifica
 
 export async function searchByNameOrId(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParamWith = `${searchParam}%`
-	const res = await query("SELECT * FROM users WHERE id LIKE ? OR name LIKE ? OR lastname LIKE ? AND active = 1", [Number(searchParam), searchParamWith, searchParamWith])
+	const res = await query("SELECT * FROM users WHERE (id LIKE ? OR name LIKE ? OR lastname LIKE ?) AND active = 1 AND type = 2", [Number(searchParam), searchParamWith, searchParamWith])
 	return res
 }
 
