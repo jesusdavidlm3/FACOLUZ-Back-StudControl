@@ -72,14 +72,18 @@ export async function verifyStudentForAssign(identification:number) {	//Verifica
 	return res
 }
 
-export async function searchByNameOrId(searchParam: string): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
+export async function searchByNameOrId(searchParam: string, page: number): Promise<object> {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParamWith = `${searchParam}%`
-	const res = await query("SELECT * FROM users WHERE (id LIKE ? OR name LIKE ? OR lastname LIKE ?) AND active = 1 AND type = 2", [Number(searchParam), searchParamWith, searchParamWith])
+	const res = await query(`
+		SELECT * FROM users
+		WHERE (id LIKE ? OR name LIKE ? OR lastname LIKE ?) AND active = 1 AND type = 2
+		LIMIT 10 OFFSET ?
+		`, [`${searchParamWith}`, searchParamWith, searchParamWith, (page-1)*10])
 	return res
 }
 
 export async function aviableTeacherslist(): Promise<object> {		//Devuelve una lista de Profesores
-	const res = await query("SELECT id, name, lastname FROM users WHERE type = 1")
+	const res = await query("SELECT id, name, lastname FROM users WHERE type = 1 AND active = 1")
 	return res
 }
 

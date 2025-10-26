@@ -112,11 +112,12 @@ app.get("/api/verifyStudentForAssign/:identification", tokenVerification.forStud
 	}
 })
 
-app.get("/api/searchByNameOrId/:searchParam", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve estudiantes segun criterio de busqueda
+app.get("/api/searchByNameOrId/:searchParam/:page", tokenVerification.forStudyControl, async(req, res) => {	//Devuelve estudiantes segun criterio de busqueda
 	const searchParam = req.params.searchParam
+	const page = Number(req.params.page)
 
 	try{
-		const dbResponse = await db.searchByNameOrId(searchParam)
+		const dbResponse = await db.searchByNameOrId(searchParam, page)
 		res.status(200).send(dbResponse)
 	}catch(err){
 		console.log(err)
